@@ -1,9 +1,9 @@
-import groovy.yaml.YamlSlurper
-
 def call(String configFile = "prod.yaml") {
-    // Load YAML from shared library resources
-    def yamlContent = libraryResource "config/${configFile}"
-    def config = new YamlSlurper().parseText(yamlContent)
+    // Load YAML from shared library resources using libraryResource
+    def yamlText = libraryResource("config/${configFile}")
+
+    // ✅ Use Jenkins' pipelineUtilitySteps readYaml (from string)
+    def config = readYaml text: yamlText
 
     def slackChannel = config.SLACK_CHANNEL_NAME
     def environmentName = config.ENVIRONMENT
@@ -27,7 +27,7 @@ def call(String configFile = "prod.yaml") {
                 }
                 steps {
                     timeout(time: 10, unit: 'MINUTES') {
-                        input message: "Approve Ansible execution for environment: ${environmentName}", ok: 'Approve'
+                        input message: "✅ Approve Ansible execution for environment: ${environmentName}", ok: 'Approve'
                     }
                 }
             }
