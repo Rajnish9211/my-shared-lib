@@ -1,7 +1,10 @@
-def call(String configFile = "prod.yaml") {
-    def config = readYaml file: "config/${configFile}"
+import groovy.yaml.YamlSlurper
 
-    // Assign config values to local Groovy variables
+def call(String configFile = "prod.yaml") {
+    // Load YAML from shared library resources
+    def yamlContent = libraryResource "config/${configFile}"
+    def config = new YamlSlurper().parseText(yamlContent)
+
     def slackChannel = config.SLACK_CHANNEL_NAME
     def environmentName = config.ENVIRONMENT
     def codePath = config.CODE_BASE_PATH
@@ -24,7 +27,7 @@ def call(String configFile = "prod.yaml") {
                 }
                 steps {
                     timeout(time: 10, unit: 'MINUTES') {
-                        input message: " Approve Ansible execution for environment: ${environmentName}", ok: 'Approve'
+                        input message: "Approve Ansible execution for environment: ${environmentName}", ok: 'Approve'
                     }
                 }
             }
