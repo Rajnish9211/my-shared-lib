@@ -35,7 +35,12 @@ def call(String configFile = "prod.yaml") {
             stage('Run Ansible') {
                 steps {
                     dir("${codePath}") {
-                        sh "ansible-playbook site.yml -i inventory.ini"
+                        // 🔐 Secure PEM injection + host key disable
+                        withCredentials([file(credentialsId: 'ansible-private-key', variable: 'PEM_FILE')]) {
+                            withEnv(['ANSIBLE_HOST_KEY_CHECKING=False']) {
+                                sh "ansible-playbook site.yml -i inventory.ini --private-key $PEM_FILE"
+                            }
+                        }
                     }
                 }
             }
