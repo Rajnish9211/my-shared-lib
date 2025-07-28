@@ -1,15 +1,15 @@
 def call(String configFile = "prod.yaml") {
     def config = readYaml file: "config/${configFile}"
 
+    // Assign config values to local Groovy variables
+    def slackChannel = config.SLACK_CHANNEL_NAME
+    def environmentName = config.ENVIRONMENT
+    def codePath = config.CODE_BASE_PATH
+    def message = config.ACTION_MESSAGE
+    def approvalStage = config.KEEP_APPROVAL_STAGE
+
     pipeline {
         agent any
-
-        environment {
-            SLACK_CHANNEL = config.SLACK_CHANNEL_NAME
-            ENVIRONMENT   = config.ENVIRONMENT
-            CODE_PATH     = config.CODE_BASE_PATH
-            MESSAGE       = config.ACTION_MESSAGE
-        }
 
         stages {
             stage('Clone Repo') {
@@ -20,26 +20,26 @@ def call(String configFile = "prod.yaml") {
 
             stage('User Approval') {
                 when {
-                    expression { return config.KEEP_APPROVAL_STAGE }
+                    expression { return approvalStage }
                 }
                 steps {
                     timeout(time: 10, unit: 'MINUTES') {
-                        input message: "Approve Ansible execution for environment: ${ENVIRONMENT}", ok: 'Approve'
+                        input message: " Approve Ansible execution for environment: ${environmentName}", ok: 'Approve'
                     }
                 }
             }
 
-            stage('Execute Ansible') {
+            stage('Run Ansible') {
                 steps {
-                    dir("${CODE_PATH}") {
-                        sh 'ansible-playbook site.yml -i inventory.ini'
+                    dir("${codePath}") {
+                        sh "ansible-playbook site.yml -i inventory.ini"
                     }
                 }
             }
 
             stage('Slack Notification') {
                 steps {
-                    slackSend channel: "${SLACK_CHANNEL}", message: "${MESSAGE}"
+                    slackSend channel: "${slackChannel}", message: "${message}"
                 }
             }
         }
