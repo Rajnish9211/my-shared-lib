@@ -1,0 +1,5 @@
+SLACK_CHANNEL_NAME: "build-status"
+ENVIRONMENT: "prod"
+CODE_BASE_PATH: "Ansible_Part"
+ACTION_MESSAGE: "Elasticsearch installation completed in PROD using Ansible!"
+KEEP_APPROVAL_STAGE: true
